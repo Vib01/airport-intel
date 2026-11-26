@@ -7,9 +7,8 @@ workers_dev = true
 crons = ["* * * * *"]
 
 [vars]
-# Set your real contact address with: npx wrangler secret put CONTACT_EMAIL
-# (a secret overrides this placeholder). It is only sent in the upstream User-Agent.
-CONTACT_EMAIL = ""
+# CONTACT_EMAIL is a secret (never committed): npx wrangler secret put CONTACT_EMAIL
+# It is only sent in the upstream User-Agent. Locally, put it in worker/.dev.vars if wanted.
 FEATURE_SCHEDULE = "false"
 # Comma-separated extra CORS origins (exact match). thevibs.com and localhost are always allowed.
 EXTRA_ORIGINS = ""
@@ -17,8 +16,8 @@ EXTRA_ORIGINS = ""
 [[d1_databases]]
 binding = "DB"
 database_name = "airport-intel"
-# Replace with the id printed by: npx wrangler d1 create airport-intel
-database_id = "00000000-0000-0000-0000-000000000000"
+# Created with: npx wrangler d1 create airport-intel (region ENAM)
+database_id = "f31efc66-9d0d-48b4-a87f-cc77200ad1ec"
 migrations_dir = "migrations"
 
 [observability]

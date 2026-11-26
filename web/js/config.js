@@ -3,8 +3,8 @@ const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
 
 export const API_BASE = isLocal
   ? 'http://localhost:8787'
-  // Replace with your deployed Worker URL after `npx wrangler deploy`.
-  : 'https://airport-intel.YOUR-SUBDOMAIN.workers.dev';
+  // Deployed Cloudflare Worker (backend). Works from any host: GitHub Pages, Vercel, your portfolio.
+  : 'https://airport-intel.airport-intel-worker.workers.dev';
 
 export const POLL_MS = 15_000;            // dashboard / aircraft
 export const POLL_SLOW_MS = 60_000;       // weather / pilot
