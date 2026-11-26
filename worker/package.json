@@ -1,0 +1,23 @@
+{
+  "name": "airport-intel-worker",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types",
+    "dev": "wrangler dev --test-scheduled",
+    "dev:cron": "node scripts/dev-cron.mjs",
+    "db:local": "wrangler d1 migrations apply airport-intel --local",
+    "db:remote": "wrangler d1 migrations apply airport-intel --remote",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.7",
+    "wrangler": "4.168.0"
+  }
+}

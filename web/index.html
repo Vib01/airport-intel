@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YYT Airport Live</title>
+<meta name="description" content="Live flights, weather and traffic for St. John's International Airport (CYYT/YYT). Situational awareness only.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232f7cf6' d='M12 2c.8 0 1.3.9 1.3 2v5.2l7.7 4.6v2l-7.7-2.3v4.7l2.2 1.7V21L12 20l-3.5 1v-1.1l2.2-1.7v-4.7L3 15.8v-2l7.7-4.6V4c0-1.1.5-2 1.3-2z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/public.css">
+<link rel="stylesheet" href="css/pilot.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<script src="vendor/leaflet-1.9.4/leaflet.js"></script>
+<script src="vendor/suncalc-1.9.0/suncalc.js"></script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#view">Skip to content</a>
+<header class="top">
+  <div class="brand">
+    <span class="brand-code">YYT</span>
+    <span class="brand-name">St. John's International <small>CYYT</small></span>
+  </div>
+  <div class="top-live">
+    <span id="clock" class="clock"></span>
+    <span id="hdr-cat"></span>
+    <span id="hdr-status"></span>
+  </div>
+  <nav id="nav" aria-label="Sections">
+    <button type="button" id="units" class="btn-units" aria-pressed="false">Units</button>
+  </nav>
+</header>
+
+<main id="view" class="view" tabindex="-1"></main>
+
+<footer class="foot">
+  <div id="foot-disc"></div>
+  <div id="foot-attr"></div>
+  <noscript><p>This dashboard needs JavaScript. Situational awareness only — use NAV CANADA official products.</p></noscript>
+</footer>
+</body>
+</html>

@@ -1,0 +1,60 @@
+/* Public display: fixed 1920×1080 stage scaled to the screen. Large type, no interaction. */
+html, body.tv { margin: 0; height: 100%; overflow: hidden; background: #000; cursor: none; }
+body.tv { font-size: 18px; display: block; min-height: 0; }
+body.tv * { cursor: none !important; }
+.stage {
+  width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--bg);
+  display: grid; gap: 12px; padding: 12px 16px; overflow: hidden;
+  grid-template-columns: 700px 660px 1fr;
+  grid-template-rows: 60px 452px 1fr 40px;
+  grid-template-areas:
+    "h h h"
+    "b b b"
+    "map wx info"
+    "f f f";
+}
+
+/* header */
+.tv-h { grid-area: h; display: flex; align-items: center; gap: 22px; min-width: 0; }
+.tv-brand { font-size: 34px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+.tv-brand small { font-size: 18px; color: var(--text-2); font-weight: 600; margin-left: 8px; }
+.tv-h .cat { font-size: 20px; padding: 2px 12px; }
+.tv-wxline { flex: 1; min-width: 0; font-size: 18px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-clock { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tv-clock small { font-size: 15px; color: var(--text-2); font-weight: 500; }
+.tv-h .pill { font-size: 15px; }
+.tv-h .status-pop { display: none; }
+
+/* flight boards: two side by side, 11 rows each */
+.tv-boards { grid-area: b; min-width: 0; }
+.tv-boards .board-frames.board-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
+.tv-boards .board-title { font-size: 26px; }
+.tv-boards .board-cols { font-size: 14px; }
+.tv-boards .board-one .board-credit { font-size: 13px; }
+.tv-live-board { height: 100%; overflow: hidden; }
+
+/* bottom row */
+.tv-map { grid-area: map; position: relative; overflow: hidden; }
+.tv-map .map { height: 100%; border-radius: var(--radius); }
+.tv-overlay { position: absolute; left: 12px; top: 10px; z-index: 500; background: rgb(0 0 0 / 65%); color: #fff; padding: 2px 10px; border-radius: 6px; font-size: 15px; }
+.tv-wx { grid-area: wx; overflow: hidden; }
+.tv-info { grid-area: info; overflow: hidden; }
+.tv-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 12px; }
+.tv-kpis > div { background: var(--surface-2); border-radius: 8px; padding: 8px 12px; }
+.tv-kpis dt { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.tv-kpis dd { margin: 2px 0 0; font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tv-f { grid-area: f; display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--text-2); overflow: hidden; white-space: nowrap; }
+.tv-f .disclaimer { margin: 0; padding: 4px 10px; flex: 0 1 auto; white-space: normal; font-size: 12.5px; line-height: 1.25; max-width: 760px; }
+.tv-f .attribution { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.tv-f .tv-upd { flex: 0 0 auto; }
+
+body.tv .panel-b { padding: 6px 12px 10px; }
+body.tv .fine { display: none; }
+body.tv .wind-wrap { grid-template-columns: 200px 1fr; gap: 10px; }
+body.tv .tbl.wind td { white-space: nowrap; }
+body.tv .tbl { font-size: 16px; }
+body.tv .tbl th, body.tv .tbl td { padding: 3px 6px; }
+body.tv .wind-now { font-size: 18px; }
+.tv-rwy { margin: 8px 0 0; font-weight: 700; font-size: 18px; }
+body.tv .sun.compact { gap: 4px 22px; font-size: 17px; }
+body.tv .leaflet-control-attribution { font-size: 11px; }

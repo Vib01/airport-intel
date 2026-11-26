@@ -1,0 +1,62 @@
+/* Design tokens. Light for the public page (follows the OS), dark for pilot/map/TV (forced via data-theme). */
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --border: #d9dee7;
+  --text: #121826;
+  --text-2: #4a5568;
+  --muted: #6b7587;
+  --accent: #1f6feb;
+  --accent-2: #0b5bd3;
+  --ok: #18794e;
+  --warn: #a35200;
+  --bad: #c0262d;
+
+  /* flight categories (text label always shown too) */
+  --vfr: #1a7f37;
+  --mvfr: #1f6feb;
+  --ifr: #c0262d;
+  --lifr: #a21caf;
+
+  /* altitude bands */
+  --alt-g: #7b8494;
+  --alt-0: #e8590c;
+  --alt-1: #d4a106;
+  --alt-2: #2f9e44;
+  --alt-3: #1c7ed6;
+  --alt-4: #7048e8;
+
+  --arr: #1f6feb;
+  --dep: #e8590c;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 10px;
+  --gap: 16px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0f17; --surface: #121826; --surface-2: #1a2232; --border: #27324a;
+    --text: #e8edf6; --text-2: #b4bfd2; --muted: #8592a8;
+    --accent: #5aa2ff; --accent-2: #8bbcff; --ok: #3fb950; --warn: #f0a33a; --bad: #ff6b6b;
+    --vfr: #3fb950; --mvfr: #5aa2ff; --ifr: #ff6b6b; --lifr: #e879f9;
+    --alt-g: #9aa4b5; --alt-0: #ff8a3d; --alt-1: #f5c542; --alt-2: #51cf66; --alt-3: #4dabf7; --alt-4: #b197fc;
+    --arr: #5aa2ff; --dep: #ff8a3d;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0f17; --surface: #121826; --surface-2: #1a2232; --border: #27324a;
+  --text: #e8edf6; --text-2: #b4bfd2; --muted: #8592a8;
+  --accent: #5aa2ff; --accent-2: #8bbcff; --ok: #3fb950; --warn: #f0a33a; --bad: #ff6b6b;
+  --vfr: #3fb950; --mvfr: #5aa2ff; --ifr: #ff6b6b; --lifr: #e879f9;
+  --alt-g: #9aa4b5; --alt-0: #ff8a3d; --alt-1: #f5c542; --alt-2: #51cf66; --alt-3: #4dabf7; --alt-4: #b197fc;
+  --arr: #5aa2ff; --dep: #ff8a3d;
+  --shadow: none;
+  color-scheme: dark;
+}

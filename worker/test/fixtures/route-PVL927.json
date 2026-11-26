@@ -1,0 +1,31 @@
+{
+    "callsign": "PVL927",
+    "number": "927",
+    "airline_code": "PVL",
+    "airport_codes": "CYYT-CYYR",
+    "_airport_codes_iata": "YYT-YYR",
+    "_airports": [
+        {
+            "name": "St. John's International Airport",
+            "icao": "CYYT",
+            "iata": "YYT",
+            "location": "St. John's",
+            "countryiso2": "CA",
+            "lat": 47.618599,
+            "lon": -52.7519,
+            "alt_feet": 461.0,
+            "alt_meters": 140.51
+        },
+        {
+            "name": "Goose Bay Airport",
+            "icao": "CYYR",
+            "iata": "YYR",
+            "location": "Goose Bay",
+            "countryiso2": "CA",
+            "lat": 53.319199,
+            "lon": -60.4258,
+            "alt_feet": 160.0,
+            "alt_meters": 48.77
+        }
+    ]
+}
