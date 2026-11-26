@@ -1,0 +1,15 @@
+[
+ {
+  "lat": 46.87,
+  "lon": -54.85,
+  "obsTime": 1795657518,
+  "fltLvl": 370,
+  "pirepType": "AIREP",
+  "rawOb": "ARP UAL19 4652N 05451W 0037 F370 279/115KT TB SMTH IC",
+  "tbInt1": "NEG",
+  "tbType1": "",
+  "tbFreq1": "",
+  "icgInt1": "",
+  "icgType1": ""
+ }
+]
