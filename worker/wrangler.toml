@@ -11,7 +11,7 @@ crons = ["* * * * *"]
 # It is only sent in the upstream User-Agent. Locally, put it in worker/.dev.vars if wanted.
 FEATURE_SCHEDULE = "false"
 # Comma-separated extra CORS origins (exact match). thevibs.com and localhost are always allowed.
-EXTRA_ORIGINS = ""
+EXTRA_ORIGINS = "https://airport-intel-xi.vercel.app"
 
 [[d1_databases]]
 binding = "DB"
