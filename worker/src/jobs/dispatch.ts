@@ -5,7 +5,7 @@ import { ingestRoutes } from '../ingest/routes';
 import { ingestForecast, ingestMetar, ingestPirep, ingestSigmet, ingestTaf } from '../ingest/weather';
 import { getState, runBatch, stateStmt } from '../store/d1';
 import { tzOffsetSec, unixNow } from '../lib/time';
-import { AIRPORT } from '../config';
+import { ADSB_POLL_MIN, AIRPORT } from '../config';
 import { prune, rollupHours } from './stats';
 import { jobsToRun } from './schedule';
 import type { Env, HealthState } from '../types';
@@ -13,8 +13,8 @@ import type { Env, HealthState } from '../types';
 type Job = { name: string; due: (m: number, h: number, lm: number) => boolean; run: (env: Env, now: number) => Promise<string | void> };
 
 export const JOBS: Job[] = [
-  { name: 'adsb', due: () => true, run: ingestAdsb },
-  { name: 'routes', due: () => true, run: ingestRoutes },   // only fetches callsigns not yet cached
+  { name: 'adsb', due: (m) => m % ADSB_POLL_MIN === 0, run: ingestAdsb },
+  { name: 'routes', due: (m) => m % ADSB_POLL_MIN === 1, run: ingestRoutes },   // right after each ADS-B poll; cached
   { name: 'metar', due: (m) => m % 5 === 0, run: ingestMetar },
   { name: 'taf', due: (m) => m % 10 === 1, run: ingestTaf },
   { name: 'pirep', due: (m) => m % 10 === 2, run: ingestPirep },

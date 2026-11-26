@@ -87,6 +87,7 @@ export type TrackState = {
   recent: Record<string, number>;    // `${hex}:${kind}` → event ts (dedupe)
   finals: FinalObs[];                 // runway alignment observations, last 20 min
   hourMax: { hourTs: number; max: number }[];   // last ~3 hours, for stats rollup
+  paused?: Record<string, number>;               // source id → unix s when its daily quota resets
 };
 
 export type RunwayInUse = {

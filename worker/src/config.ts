@@ -22,7 +22,8 @@ export const RUNWAYS: RunwayConfig[] = [
 
 export const DETECT = {
   lowAglFt: 2000, vsArrFpm: -300, vsDepFpm: 300,
-  lostAfterSec: 180, dedupeSec: 1800, trailMinutes: 15, trailMaxPts: 16,
+  // lostAfterSec: two missed polls at the 3-minute ADS-B cadence (ADSB_POLL_MIN) before a track is "lost".
+  lostAfterSec: 360, dedupeSec: 1800, trailMinutes: 15, trailMaxPts: 16,
   runwayAlignDeg: 20,                 // track within ±20° of runway heading
   finalAglFt: 1500,                   // runwayInUse: below this AGL inside finalNm
   runwayWindowSec: 20 * 60,           // runwayInUse look-back
@@ -54,6 +55,9 @@ export const CATEGORY = {             // FAA convention
   ifrCeilFt: 1000, ifrVisSm: 3,
   mvfrCeilFt: 3000, mvfrVisSm: 5,
 };
+
+// adsb.lol allows 500 requests/day per IP: every 3 minutes = 480/day. Lower only with a keyed source.
+export const ADSB_POLL_MIN = 3;
 
 export const SQUAWK = { emergency: '7700', radioFail: '7600', special: '7500' };
 
@@ -116,7 +120,7 @@ export const OPEN_METEO_BASE = 'https://api.open-meteo.com/v1/forecast';
 
 // Source health: STALE after `staleSec` without success, OFFLINE after `offlineSec`.
 export const HEALTH: Record<string, { staleSec: number; offlineSec: number }> = {
-  adsb: { staleSec: 180, offlineSec: 900 },
+  adsb: { staleSec: 420, offlineSec: 1800 },      // polled every ADSB_POLL_MIN minutes
   routes: { staleSec: 900, offlineSec: 6 * 3600 },
   metar: { staleSec: 900, offlineSec: 3 * 3600 },
   taf: { staleSec: 1800, offlineSec: 6 * 3600 },

@@ -44,6 +44,9 @@ export const RADAR = {
   refreshMs: 6 * 60_000,
 };
 
+// Embedded live map (verified embeddable 2026-11-26; globe.adsb.fi / airplanes.live refuse framing).
+export const LIVE_MAP = { url: 'https://globe.adsb.lol/', lat: 47.6186, lon: -52.7519, zoom: 8 };
+
 export const MAP = {
   tiles: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   rings: [5, 10, 25, 50],

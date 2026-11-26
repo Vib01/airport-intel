@@ -7,7 +7,7 @@ import { onUnitMode, fmt } from '../lib/units.js';
 import { ddhhmmZ, nowSec } from '../lib/time.js';
 import { loadAirlines } from '../lib/airlines.js';
 import { renderKpis } from '../components/kpi-strip.js';
-import { MapPanel } from '../components/map-panel.js';
+import { liveMapEmbed } from '../components/live-map-embed.js';
 import { boardEmbed } from '../components/board-embed.js';
 import { renderFlightBoard } from '../components/flight-board.js';
 import { renderMovements } from '../components/movements-table.js';
@@ -52,7 +52,7 @@ export function mount(root) {
 
   // ---- Traffic: map + observed movements
   const sTraffic = section('traffic', 'Live traffic');
-  const pMap = panel('Map', { cls: 'd-map' });
+  const pMap = panel('Live map', { cls: 'd-map' });
   const pMv = panel('Observed landings & takeoffs', { cls: 'd-mv' });
   sTraffic.append(pMap.el, pMv.el);
 
@@ -75,8 +75,8 @@ export function mount(root) {
 
   root.append(sOver, sFl, sTraffic, sWx, sPilot);
 
-  pMap.body.classList.add('flush');
-  const mapPanel = new MapPanel(pMap.body);
+
+  pMap.body.append(liveMapEmbed());
   pLinks.body.innerHTML = `<ul class="links">
       <li><a href="${esc(LINKS.navcanCfps)}" target="_blank" rel="noopener">NAV CANADA CFPS</a> — NOTAMs, GFA, official METAR/TAF</li>
       <li>NOTAMs are <b>not</b> shown on this site. Always check them.</li>
@@ -98,8 +98,8 @@ export function mount(root) {
     renderKpis(kpi, d, now);
     renderFlightBoard(pFlights.body, d?.flights);
     setPanelStatus(pFlights, adsb);
-    mapPanel.setDashboard(d);
-    setPanelStatus(pMap, adsb);
+
+
     renderMovements(pMv.body, d?.movements ?? [], { limit: 10, showRunway: true });
     setPanelStatus(pMv, adsb);
     renderWeatherCard(pWx.body, d?.weather, { now });
@@ -124,7 +124,7 @@ export function mount(root) {
     setPanelStatus(pPirep, combine(s.status, src.pirep?.status));
     renderSigmetList(pSig.body, d?.sigmet);
     setPanelStatus(pSig, combine(s.status, src.sigmet?.status));
-    mapPanel.setPilot(d, now);
+
   };
   const unsubs = [
     subscribe('dashboard', drawDash),
@@ -134,7 +134,7 @@ export function mount(root) {
   loadAirlines().then(() => { lastDash && drawDash(lastDash); });
   const sunTimer = setInterval(() => renderSunTimes(sunSlot, true), 10 * 60_000);
 
-  return () => { unsubs.forEach((u) => u()); stopPilot(); clearInterval(sunTimer); mapPanel.destroy(); board.destroy?.(); };
+  return () => { unsubs.forEach((u) => u()); stopPilot(); clearInterval(sunTimer); board.destroy?.(); };
 }
 
 function renderSigmetList(el, fc) {

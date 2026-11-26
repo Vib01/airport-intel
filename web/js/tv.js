@@ -6,7 +6,7 @@ import { subscribe } from './state.js';
 import { panel, setPanelStatus, esc } from './lib/dom.js';
 import { hm, nowSec, tzAbbr, ago, dateLong } from './lib/time.js';
 import { fmt } from './lib/units.js';
-import { AircraftMap } from './components/aircraft-map.js';
+import { liveMapEmbed } from './components/live-map-embed.js';
 import { boardEmbed } from './components/board-embed.js';
 import { renderFlightBoard } from './components/flight-board.js';
 import { categoryBadge } from './components/metar-panel.js';
@@ -46,7 +46,7 @@ const info = panel('Today at YYT');
 $('tv-info').replaceWith(Object.assign(info.el, { className: 'tv-info panel' }));
 info.body.innerHTML = '<dl class="tv-kpis" id="tv-kpis"></dl><div id="tv-sun"></div>';
 
-const map = new AircraftMap($('tv-map'), { labels: true, trails: true, interactive: false, fitNm: 40 });
+$('tv-map').append(liveMapEmbed({ zoom: 8, labels: true, interactive: false }));
 
 poll('dashboard', '/v1/dashboard', POLL_MS);
 poll('pilot', '/v1/pilot', POLL_SLOW_MS);
@@ -58,8 +58,8 @@ subscribe('dashboard', (s) => {
   $('tv-cat').innerHTML = categoryBadge(d?.weather?.derived?.category, { long: true });
   $('tv-wxline').textContent = m ? `${fmt.temp(m.tempC)} · ${weatherSentence(m)}` : '';
   renderStatusPill($('tv-status'), s.status, d?.health ?? null, s.okAt, nowSec());
-  if (d) { map.setMeta(d.meta); map.update(d.aircraft ?? []); }
-  $('tv-count').textContent = `${(d?.aircraft ?? []).length} aircraft within 60 nm · live ADS-B`;
+
+  $('tv-count').textContent = `${(d?.aircraft ?? []).length} aircraft within 60 nm (our 3-min tracking)`;
   if (!BOARD_CONFIGURED) renderFlightBoard($('tv-live-board'), d?.flights, { compact: true });
 
   const t = d?.stats?.today;

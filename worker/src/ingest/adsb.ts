@@ -39,7 +39,7 @@ async function fetchOpenSky(env: Env, now: number): Promise<Aircraft[]> {
 }
 
 /** OpenSky first (when configured), then the ADSBExchange-v2 sources. Returns normalized aircraft. */
-export async function fetchAircraft(env: Env, now: number): Promise<{ source: string; aircraft: Aircraft[] }> {
+export async function fetchAircraft(env: Env, now: number, paused: Record<string, number> = {}): Promise<{ source: string; aircraft: Aircraft[] }> {
   const errors: string[] = [];
   if (OPENSKY.enabled && env.OPENSKY_CLIENT_ID && env.OPENSKY_CLIENT_SECRET) {
     try {
@@ -49,17 +49,18 @@ export async function fetchAircraft(env: Env, now: number): Promise<{ source: st
     }
   }
   try {
-    const { source, raw } = await fetchAdsb(env);
+    const { source, raw } = await fetchAdsb(env, now, paused);
     return { source, aircraft: normalizeAdsbV2(raw as never, now) };
   } catch (e) {
     throw new Error([...errors, (e as Error).message].join(' | '));
   }
 }
 
-export async function fetchAdsb(env: Env): Promise<{ source: string; raw: unknown }> {
+export async function fetchAdsb(env: Env, now = Math.floor(Date.now() / 1000), paused: Record<string, number> = {}): Promise<{ source: string; raw: unknown }> {
   const errors: string[] = [];
   for (const s of ADSB_SOURCES) {
     if (!s.enabled) continue;
+    if ((paused[s.id] ?? 0) > now) { errors.push(`${s.id}: paused (daily limit) until ${new Date(paused[s.id] * 1000).toISOString().slice(11, 16)}Z`); continue; }
     const key = s.keySecret ? env[s.keySecret]?.trim() : undefined;
     if (s.keySecret && !key) continue;                       // keyed source without its key: skip
     try {
@@ -67,19 +68,33 @@ export async function fetchAdsb(env: Env): Promise<{ source: string; raw: unknow
       const raw = await fetchJson(s.url(AIRPORT.lat, AIRPORT.lon, AIRPORT.ingestRadiusNm), env.CONTACT_EMAIL, { headers });
       return { source: s.id, raw };
     } catch (e) {
+      // 429 = daily quota used up: stop asking until it resets (next 00:00 UTC) instead of hammering it.
+      if (e instanceof HttpError && e.status === 429) paused[s.id] = nextUtcMidnight(now);
       errors.push(`${s.id}: ${(e as Error).message}`);
     }
   }
   throw new Error(`all ADS-B sources failed — ${errors.join(' | ')}`);
 }
 
+export const nextUtcMidnight = (now: number) => (Math.floor(now / 86400) + 1) * 86400;
+
 /** Returns the source used (recorded as health.sourceUsed). */
 export async function ingestAdsb(env: Env, now: number): Promise<string> {
-  const { source, aircraft } = await fetchAircraft(env, now);
-
   const prev = await getState(env.DB, ['tracks']);
   if (!prev.ok) throw new Error(`D1 read: ${prev.error}`);
   const prevTracks = (prev.value.tracks?.value as TrackState | undefined)?.v === 1 ? (prev.value.tracks!.value as TrackState) : emptyTrackState(now);
+  const paused: Record<string, number> = { ...(prevTracks.paused ?? {}) };
+
+  let source: string, aircraft: Aircraft[];
+  try {
+    ({ source, aircraft } = await fetchAircraft(env, now, paused));
+  } catch (e) {
+    // Remember any new pause so the next tick doesn't retry a source that is out of quota.
+    if (JSON.stringify(paused) !== JSON.stringify(prevTracks.paused ?? {})) {
+      await runBatch(env.DB, [stateStmt(env.DB, 'tracks', { ...prevTracks, paused }, now)]);
+    }
+    throw e;
+  }
 
   const finals = mergeFinals(prevTracks.finals ?? [], observeFinals(aircraft, now, RUNWAYS), now);
   const runway = runwayInUse(finals, now, RUNWAYS);
@@ -90,7 +105,7 @@ export async function ingestAdsb(env: Env, now: number): Promise<string> {
 
   const res = await runBatch(env.DB, [
     stateStmt(env.DB, 'live', live, now),
-    stateStmt(env.DB, 'tracks', state, now),
+    stateStmt(env.DB, 'tracks', { ...state, paused: Object.fromEntries(Object.entries(paused).filter(([, t]) => t > now)) }, now),
     ...events.map((e) => movementStmt(env.DB, e)),
   ]);
   if (!res.ok) throw new Error(`D1 write: ${res.error}`);
