@@ -20,6 +20,6 @@ export function attribution(adsbSourceUsed = null, compact = false) {
     `${esc(what)} ${list.map(([n, u, lic]) =>
       `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>${lic ? ` (${esc(lic)})` : ''}${adsbSourceUsed === n ? ' <span class="muted">· in use</span>' : ''}`).join(', ')}`).join(' · ') +
     ' · Sun times: SunCalc · Routes and origins from ADS-B are unverified. ' +
-    '<a href="https://github.com/" class="repo-link" target="_blank" rel="noopener">Open source (MIT)</a>';
+    '<a href="https://github.com/Vib01/airport-intel" class="repo-link" target="_blank" rel="noopener">Open source (MIT)</a>';
   return el;
 }
