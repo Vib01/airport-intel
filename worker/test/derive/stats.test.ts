@@ -19,11 +19,21 @@ describe('stats', () => {
     });
   });
 
-  it('todaySummary: totals, busiest hour, top airlines, hourly buckets', () => {
-    const s = todaySummary([mv('ARR', H + 10), mv('DEP', H + 20), mv('ARR', H + 3700, 'WJA'), mv('ARR', H - 10)], H, H + 7200);
-    expect(s).toMatchObject({ arr: 2, dep: 1, total: 3, busiestHour: { hourTs: H, count: 2 } });
+  it('todaySummary buckets by LOCAL clock hour (NST hours run :30–:30 UTC)', () => {
+    const Z = (iso: string) => Date.parse(iso) / 1000;
+    const day0 = localDayStart(Z('2026-11-25T12:00:00Z'), TZ);           // 2026-11-25 00:00 NST = 03:30Z
+    expect(day0).toBe(Z('2026-11-25T03:30:00Z'));
+    // 20:10 and 20:50 NST are the same local hour, though they straddle a UTC hour (23:40Z / 00:20Z).
+    const s = todaySummary([
+      mv('ARR', Z('2026-11-25T23:40:00Z')),             // 20:10 NST
+      mv('DEP', Z('2026-11-26T00:20:00Z')),             // 20:50 NST
+      mv('ARR', Z('2026-11-26T00:35:00Z'), 'WJA'),      // 21:05 NST
+      mv('ARR', Z('2026-11-25T03:20:00Z')),             // 23:50 NST the day before: excluded
+    ], day0, Z('2026-11-26T01:42:00Z'), TZ);
+    expect(s).toMatchObject({ arr: 2, dep: 1, total: 3, busiestHour: { hourTs: Z('2026-11-25T23:30:00Z'), count: 2 } });  // 20:00 NST
     expect(s.topAirlines[0]).toEqual({ key: 'ACA', count: 2 });
-    expect(s.byHour).toHaveLength(3);
+    expect(s.byHour).toHaveLength(23);                                     // 00:00 … 22:00 NST
+    expect(s.byHour.every((b) => (b.hourTs - day0) % 3600 === 0)).toBe(true);
   });
 
   it('topN sorts by count then key', () => {

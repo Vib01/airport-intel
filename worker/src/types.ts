@@ -166,10 +166,13 @@ export type ForecastHour = {
   windKt: number | null; windDirDeg: number | null; gustKt: number | null; visM: number | null; cloudPct: number | null;
 };
 
+export type PirepKind = 'UUA' | 'UA' | 'AIREP';
 export type Pirep = {
   obsTime: number; lat: number; lon: number; distNm: number; bearingDeg: number;
-  altFt: number | null; acType: string | null; type: string;
-  turbulence: string | null; icing: string | null; wx: string | null;
+  altFt: number | null; acType: string | null; type: string; kind: PirepKind;
+  turbulence: string | null; icing: string | null;   // actual reports only
+  negative: string | null;                           // e.g. "TB NEG, IC NEG" (pilot reported none)
+  wx: string | null;
   tempC: number | null; windDirDeg: number | null; windKt: number | null;
   raw: string;
 };

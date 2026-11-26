@@ -67,7 +67,7 @@ export function renderFlightBoard(el, board, { compact = false, which = 'both' }
       ${compact ? '' : `<p class="fb-summary">${over ? `Also tracking <b>${over}</b> overflight${over === 1 ? '' : 's'} passing YYT (not landing or departing). ` : ''}Shown on the map below.</p>
       <p class="fine">Live from ADS-B tracking: flights inbound to or outbound from YYT within ~60 nm, landings/takeoffs detected in the last 3 h,
       and local traffic (helicopters, light aircraft, unknown routes) within 15 nm below 10,000 ft.
-      Origins/destinations come from ${esc(board?.routeSource ?? 'community route data')} — unverified. ETAs are distance ÷ ground speed, not airline estimates.
+      Origins/destinations come from ${esc(board?.routeSource ?? 'community route data (unverified)')}. ETAs are distance ÷ ground speed, not airline estimates.
       Coverage depends on volunteer ADS-B receivers: smaller aircraft at low altitude near St. John's are sometimes not received, so the scheduled board above is the complete list.</p>`}`;
   };
   draw();

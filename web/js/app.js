@@ -36,7 +36,7 @@ function boot() {
   subscribe('dashboard', (s) => {
     const d = s.data;
     $('#hdr-cat').innerHTML = categoryBadge(d?.weather?.derived?.category);
-    renderStatusPill($('#hdr-status'), s.status, d?.health ?? null, s.okAt);
+    renderStatusPill($('#hdr-status'), s.status, d?.health ?? null, s.okAt, nowSec());
     $('#foot-attr').replaceChildren(attribution(d?.health?.sources?.adsb?.sourceUsed ?? null));
   });
 

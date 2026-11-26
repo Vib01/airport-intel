@@ -1,7 +1,7 @@
 // Map overlays: ECCC GeoMet radar WMS (browser-loaded tiles, OGL-Canada), SIGMET polygons, PIREP markers.
 import { FEATURES, RADAR } from '../config.js';
 import { esc } from '../lib/dom.js';
-import { ago, ddhhmmZ } from '../lib/time.js';
+import { ago, ddhhmmZ, nowSec } from '../lib/time.js';
 import { fmt } from '../lib/units.js';
 
 export class Overlays {
@@ -42,12 +42,12 @@ export class Overlays {
     this.toggle(this.sigmet, on);
   }
 
-  setPireps(list, on) {
+  setPireps(list, on, now = nowSec()) {
     this.pirep.clearLayers();
     for (const p of list ?? []) {
       const sev = p.turbulence || p.icing;
       L.circleMarker([p.lat, p.lon], { radius: sev ? 7 : 4, className: `pirep ${sev ? 'pirep-sig' : ''}`, weight: 1.5 })
-        .bindPopup(`<b>${esc(p.type)} ${esc(p.acType ?? '')}</b> · ${esc(fmt.flAlt(p.altFt))} · ${esc(ago(p.obsTime))}<br>
+        .bindPopup(`<b>${esc(p.type)} ${esc(p.acType ?? '')}</b> · ${esc(fmt.flAlt(p.altFt))} · ${esc(ago(p.obsTime, now))}<br>
           ${p.turbulence ? `Turbulence: ${esc(p.turbulence)}<br>` : ''}${p.icing ? `Icing: ${esc(p.icing)}<br>` : ''}
           <pre class="raw small">${esc(p.raw)}</pre>`, { maxWidth: 360 })
         .addTo(this.pirep);

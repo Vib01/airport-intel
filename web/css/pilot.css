@@ -56,5 +56,13 @@
 .taf-list { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; display: grid; gap: 4px; }
 .taf-list li { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 
+/* PIREP list */
+.pk { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+.pk-uua { color: var(--bad); } .pk-ua { color: var(--accent); } .pk-airep { color: var(--muted); }
+.tbl.pireps tr.uua td { background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.tbl.pireps tr.aloft td { background: var(--surface-2); }
+.tbl.pireps tr.aloft summary { cursor: pointer; }
+.tbl.pireps.inner { margin-top: 6px; }
+
 .sigmets { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px; }
 .links { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 4px; }

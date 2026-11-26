@@ -1,7 +1,7 @@
 // Top-of-page KPI tiles: the key numbers at a glance. Every tile has a text label (not colour only).
 import { esc } from '../lib/dom.js';
 import { fmt } from '../lib/units.js';
-import { hm } from '../lib/time.js';
+import { hm, nowSec } from '../lib/time.js';
 import { sunTimes } from './sun-times.js';
 import { categoryBadge } from './metar-panel.js';
 
@@ -17,7 +17,7 @@ function ceiling(m) {
 const TREND = { RISING: '↑ rising', FALLING: '↓ falling', STEADY: '→ steady' };
 
 /** @param {HTMLElement} el @param {import('../types.js').Dashboard|null} d */
-export function renderKpis(el, d) {
+export function renderKpis(el, d, now = nowSec()) {
   const m = d?.weather?.metar?.decoded ?? null;
   const dv = d?.weather?.derived ?? null;
   const t = d?.stats?.today ?? null;
@@ -27,7 +27,7 @@ export function renderKpis(el, d) {
   const inbound = (d?.flights?.arrivals ?? []).filter((r) => r.tracked && r.status !== 'LANDED');
   const outbound = (d?.flights?.departures ?? []).filter((r) => r.tracked);
   const c = ceiling(m);
-  const sun = sunTimes();
+  const sun = sunTimes(new Date(now * 1000));
   const rw = d?.runway;
   const wind = !m ? '—' : m.windKt === 0 ? 'Calm'
     : `${m.windVariable || m.windDirDeg == null ? 'VRB' : fmt.dir(m.windDirDeg)} ${fmt.num(m.windKt)}${m.gustKt ? 'G' + fmt.num(m.gustKt) : ''} kt`;

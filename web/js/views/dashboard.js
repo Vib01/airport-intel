@@ -4,7 +4,7 @@ import { combine, poll } from '../api.js';
 import { subscribe } from '../state.js';
 import { panel, setPanelStatus, esc } from '../lib/dom.js';
 import { onUnitMode, fmt } from '../lib/units.js';
-import { ddhhmmZ } from '../lib/time.js';
+import { ddhhmmZ, nowSec } from '../lib/time.js';
 import { loadAirlines } from '../lib/airlines.js';
 import { renderKpis } from '../components/kpi-strip.js';
 import { MapPanel } from '../components/map-panel.js';
@@ -91,38 +91,40 @@ export function mount(root) {
   let lastDash = null;
   const drawDash = (s) => {
     lastDash = s;
+    const now = nowSec();                     // one clock reading per render, passed to every panel
     const d = s.data;
     const src = d?.health?.sources ?? {};
     const adsb = combine(s.status, src.adsb?.status);
-    renderKpis(kpi, d);
+    renderKpis(kpi, d, now);
     renderFlightBoard(pFlights.body, d?.flights);
     setPanelStatus(pFlights, adsb);
     mapPanel.setDashboard(d);
     setPanelStatus(pMap, adsb);
     renderMovements(pMv.body, d?.movements ?? [], { limit: 10, showRunway: true });
     setPanelStatus(pMv, adsb);
-    renderWeatherCard(pWx.body, d?.weather);
+    renderWeatherCard(pWx.body, d?.weather, { now });
     setPanelStatus(pWx, combine(s.status, src.metar?.status));
-    renderRunwayInUse(pRwy.body, d?.runway);
+    renderRunwayInUse(pRwy.body, d?.runway, now);
     setPanelStatus(pRwy, adsb);
   };
   const drawPilot = (s) => {
+    const now = nowSec();
     const d = s.data;
     const src = d?.health?.sources ?? {};
     const metarSt = combine(s.status, src.metar?.status);
     renderMetarPanel(pMetar.body, d);
     setPanelStatus(pMetar, metarSt);
-    renderTafTimeline(pTaf.body, d?.taf);
+    renderTafTimeline(pTaf.body, d?.taf, { now });
     setPanelStatus(pTaf, combine(s.status, src.taf?.status));
     renderWindRunways(pWind.body, d, d?.meta);
     setPanelStatus(pWind, metarSt);
     renderDaPanel(pDa.body, d, d?.meta);
     setPanelStatus(pDa, metarSt);
-    renderPirepList(pPirep.body, d?.pirep, { limit: 12 });
+    renderPirepList(pPirep.body, d?.pirep, { limit: 12, now, windsAloft: d?.windsAloft });
     setPanelStatus(pPirep, combine(s.status, src.pirep?.status));
     renderSigmetList(pSig.body, d?.sigmet);
     setPanelStatus(pSig, combine(s.status, src.sigmet?.status));
-    mapPanel.setPilot(d);
+    mapPanel.setPilot(d, now);
   };
   const unsubs = [
     subscribe('dashboard', drawDash),

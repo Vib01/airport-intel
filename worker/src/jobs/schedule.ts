@@ -4,13 +4,14 @@
 import { CATCHUP, HEALTH } from '../config';
 import type { HealthState } from '../types';
 
-export type JobSlot = { name: string; due: (m: number, h: number) => boolean };
+/** m, h: UTC minute/hour of the tick; lm: LOCAL minute (airport time zone). */
+export type JobSlot = { name: string; due: (m: number, h: number, lm: number) => boolean };
 
-export function jobsToRun(jobs: JobSlot[], m: number, h: number, now: number, health: HealthState): { name: string; why: 'due' | 'catchup' }[] {
+export function jobsToRun(jobs: JobSlot[], m: number, h: number, now: number, health: HealthState, lm: number = m): { name: string; why: 'due' | 'catchup' }[] {
   const out: { name: string; why: 'due' | 'catchup' }[] = [];
   let catchups = 0;
   for (const j of jobs) {
-    if (j.due(m, h)) { out.push({ name: j.name, why: 'due' }); continue; }
+    if (j.due(m, h, lm)) { out.push({ name: j.name, why: 'due' }); continue; }
     const s = health[j.name];
     const staleSec = HEALTH[j.name]?.staleSec ?? Infinity;
     const neverOk = !s?.lastOkAt;

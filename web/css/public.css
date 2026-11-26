@@ -36,6 +36,7 @@
 .fc-t { color: var(--muted); font-weight: 600; }
 .fc-temp { font-weight: 700; font-size: 13px; }
 .fc-pop { color: var(--accent); font-size: 11px; min-height: 15px; }
+.fc-pop.zero { color: var(--muted); }
 .fc-wind { color: var(--text-2); font-size: 11px; }
 .fc-wind sup { font-size: 9px; color: var(--warn); }
 .wxi { width: 24px; height: 24px; color: var(--text-2); }

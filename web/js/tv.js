@@ -57,7 +57,7 @@ subscribe('dashboard', (s) => {
   const m = d?.weather?.metar?.decoded;
   $('tv-cat').innerHTML = categoryBadge(d?.weather?.derived?.category, { long: true });
   $('tv-wxline').textContent = m ? `${fmt.temp(m.tempC)} · ${weatherSentence(m)}` : '';
-  renderStatusPill($('tv-status'), s.status, d?.health ?? null, s.okAt);
+  renderStatusPill($('tv-status'), s.status, d?.health ?? null, s.okAt, nowSec());
   if (d) { map.setMeta(d.meta); map.update(d.aircraft ?? []); }
   $('tv-count').textContent = `${(d?.aircraft ?? []).length} aircraft within 60 nm · live ADS-B`;
   if (!BOARD_CONFIGURED) renderFlightBoard($('tv-live-board'), d?.flights, { compact: true });

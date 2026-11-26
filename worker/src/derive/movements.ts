@@ -5,13 +5,13 @@
 //  DEP/LOW : first seen inside terminalNm, AGL < lowAglFt, climbing.
 //  Dedupe (hex, kind) within dedupeSec.
 import { AIRPORT, DETECT, type RunwayConfig } from '../config';
-import { hourStart } from '../lib/time';
+import { localHourStart } from '../lib/time';
 import { appendTrail } from './trails';
 import { matchRunway } from './runwayInUse';
 import type { Aircraft, MovementEvent, MovementKind, Confidence, Track, TrackSample, TrackState } from '../types';
 
 export function emptyTrackState(now: number): TrackState {
-  return { v: 1, updatedAt: now, tracks: {}, recent: {}, finals: [], hourMax: [{ hourTs: hourStart(now), max: 0 }] };
+  return { v: 1, updatedAt: now, tracks: {}, recent: {}, finals: [], hourMax: [{ hourTs: localHourStart(now, AIRPORT.tz), max: 0 }] };
 }
 
 export function toSample(a: Aircraft, elevFt: number): TrackSample {
@@ -91,7 +91,7 @@ export function detectMovements(
     }
   }
 
-  const h = hourStart(now);
+  const h = localHourStart(now, ap.tz);
   const count = aircraft.length;
   const hist = (Array.isArray(prev.hourMax) ? prev.hourMax : []).filter((x) => x.hourTs !== h && h - x.hourTs <= 3 * 3600);
   const cur = (Array.isArray(prev.hourMax) ? prev.hourMax : []).find((x) => x.hourTs === h);

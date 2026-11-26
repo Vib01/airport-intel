@@ -1,6 +1,6 @@
 // TAF raw + timeline bars coloured by category (with text labels — colour is never the only signal).
 import { esc } from '../lib/dom.js';
-import { ddhhmmZ, hour } from '../lib/time.js';
+import { ddhhmmZ, hm, localHour, localHourStart, nowSec } from '../lib/time.js';
 import { fmt } from '../lib/units.js';
 
 const ROW = { BASE: 0, FM: 0, BECMG: 1, TEMPO: 2, PROB: 3 };
@@ -13,15 +13,23 @@ function summary(p) {
   return [w, v, p.wx, c].filter(Boolean).join(' ');
 }
 
-export function renderTafTimeline(el, taf, { showRaw = true } = {}) {
+/** Ticks on real LOCAL clock hours divisible by `every` (e.g. 00:00, 03:00 … NST = 03:30Z, 06:30Z …). */
+export function localTicks(t0, t1, every = 3) {
+  const out = [];
+  for (let t = localHourStart(t0) + (localHourStart(t0) < t0 ? 3600 : 0); t < t1; t += 3600) {
+    if (localHour(t) % every === 0) out.push(t);
+  }
+  return out;
+}
+
+export function renderTafTimeline(el, taf, { showRaw = true, now = nowSec() } = {}) {
   if (!taf?.periods?.length) { el.innerHTML = '<p class="muted">No TAF available.</p>'; return; }
   const t0 = taf.validFrom, t1 = taf.validTo, span = Math.max(1, t1 - t0);
   const usedRows = [...new Set(taf.periods.map((p) => ROW[p.change] ?? 0))].sort();
   const pct = (t) => ((Math.min(Math.max(t, t0), t1) - t0) / span) * 100;
 
-  const ticks = [];
-  for (let t = Math.ceil(t0 / 10800) * 10800; t < t1; t += 10800) ticks.push(t);
-  const nowP = pct(Date.now() / 1000);
+  const ticks = localTicks(t0, t1, 3);
+  const nowP = pct(now);
 
   const bar = (p) => {
     const l = pct(p.from), w = Math.max(0.4, pct(p.to) - l);
@@ -34,7 +42,7 @@ export function renderTafTimeline(el, taf, { showRaw = true } = {}) {
     ${showRaw ? `<pre class="raw raw-taf">${esc(taf.raw.replace(/\s(?=(FM\d{6}|TEMPO|BECMG|PROB\d{2}|RMK))/g, '\n  '))}</pre>` : ''}
     <div class="taf-chart" role="img" aria-label="TAF timeline from ${esc(ddhhmmZ(t0))} to ${esc(ddhhmmZ(t1))}">
       <div class="taf-axis"><span class="taf-rl"></span><div class="taf-track">
-        ${ticks.map((t) => `<span class="taf-tick" style="left:${pct(t)}%">${esc(hour(t))}h</span>`).join('')}</div></div>
+        ${ticks.map((t) => `<span class="taf-tick" style="left:${pct(t)}%">${esc(hm(t))}</span>`).join('')}</div></div>
       ${usedRows.map((r) => `<div class="taf-row"><span class="taf-rl">${ROW_LABEL[r]}</span><div class="taf-track">
         ${ticks.map((t) => `<span class="taf-grid" style="left:${pct(t)}%"></span>`).join('')}
         ${taf.periods.filter((p) => (ROW[p.change] ?? 0) === r).map(bar).join('')}

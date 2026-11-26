@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { normalizePireps } from '../../src/normalize/pirep';
+import { windsAloft } from '../../src/derive/windsAloft';
 import { filterSigmets } from '../../src/normalize/sigmet';
 import { normalizeForecast } from '../../src/normalize/forecast';
 import { fixture } from '../helpers';
@@ -25,6 +26,57 @@ describe('normalizePireps (real fixture)', () => {
     const [p] = normalizePireps([{ lat: 47.7, lon: -52.8, obsTime: 100, fltLvl: 80, tbInt1: 'MOD', tbType1: 'CHOP', tbBas1: 60, tbTop1: 100, icgInt1: 'LGT', icgType1: 'RIME', rawOb: 'UA /OV YYT' }], 100);
     expect(p.turbulence).toBe('MOD CHOP FL060–FL100');
     expect(p.icing).toBe('LGT RIME');
+  });
+});
+
+describe('PIREP kinds, NEG reports and winds-aloft summary (real mixed fixture)', () => {
+  const raw = fixture<{ obsTime: number }[]>('pirep-mixed.json');
+  const now = Math.max(...raw.map((r) => r.obsTime));
+  // Wide radius: the fixture is a regional sample, not all near CYYT.
+  const list = normalizePireps(raw, now, undefined, 5000, 6);
+  const byRaw = (prefix: string) => list.find((p) => p.raw.startsWith(prefix))!;
+
+  it('classifies UA vs AIREP from the report', () => {
+    expect(byRaw('ELM UA').kind).toBe('UA');
+    expect(byRaw('ARP UAL3').kind).toBe('AIREP');
+    expect(list.filter((p) => p.kind === 'AIREP')).toHaveLength(4);
+  });
+
+  it('decoded turbulence is a hazard; "TB NEG / IC NEG" is not', () => {
+    expect(byRaw('ELM UA').turbulence).toBe('LGT-MOD CHOP CONT');
+    expect(byRaw('MGJ UA').turbulence).toBe('LGT-MOD CHOP FL220–FL240');
+    const neg = byRaw('DPA UA');
+    expect(neg.turbulence).toBeNull();
+    expect(neg.icing).toBeNull();
+    expect(neg.negative).toBe('TB NEG, IC NEG');
+  });
+
+  it('falls back to the raw /TB group when AWC did not decode it ("/TB -CHP")', () => {
+    expect(byRaw('ORD UA').turbulence).toBe('-CHP');
+    expect(byRaw('RFD UA').turbulence).toBeNull();
+  });
+
+  it('UUA detection', () => {
+    const [u] = normalizePireps([{ lat: 47.7, lon: -52.8, obsTime: 100, rawOb: 'YYT UUA /OV YYT/TM 0100/FL050/TP DH8D/TB SEV', pirepType: 'PIREP' }], 100);
+    expect(u.kind).toBe('UUA');
+    expect(u.turbulence).toBe('SEV');
+  });
+
+  it('winds-aloft summary collapses routine AIREPs only', () => {
+    const w = windsAloft(list)!;
+    expect(w.count).toBe(4);
+    expect(w.minAltFt).toBe(33000);
+    expect(w.maxAltFt).toBe(45000);
+    expect(w.minKt).toBe(87);
+    expect(w.maxKt).toBe(154);
+    expect(w.avgDirDeg).toBeGreaterThanOrEqual(280);
+    expect(w.avgDirDeg).toBeLessThanOrEqual(290);
+    expect(windsAloft(list.filter((p) => p.kind === 'UA'))).toBeNull();
+  });
+
+  it('direction is a vector average (350° and 010° → 000°)', () => {
+    const mk = (dir: number) => ({ kind: 'AIREP', turbulence: null, icing: null, windDirDeg: dir, windKt: 100, altFt: 35000, tempC: -50, obsTime: 1 }) as never;
+    expect(windsAloft([mk(350), mk(10)])!.avgDirDeg).toBe(0);
   });
 });
 

@@ -4,12 +4,13 @@ import { ingestAdsb } from '../ingest/adsb';
 import { ingestRoutes } from '../ingest/routes';
 import { ingestForecast, ingestMetar, ingestPirep, ingestSigmet, ingestTaf } from '../ingest/weather';
 import { getState, runBatch, stateStmt } from '../store/d1';
-import { unixNow } from '../lib/time';
+import { tzOffsetSec, unixNow } from '../lib/time';
+import { AIRPORT } from '../config';
 import { prune, rollupHours } from './stats';
 import { jobsToRun } from './schedule';
 import type { Env, HealthState } from '../types';
 
-type Job = { name: string; due: (m: number, h: number) => boolean; run: (env: Env, now: number) => Promise<string | void> };
+type Job = { name: string; due: (m: number, h: number, lm: number) => boolean; run: (env: Env, now: number) => Promise<string | void> };
 
 export const JOBS: Job[] = [
   { name: 'adsb', due: () => true, run: ingestAdsb },
@@ -19,19 +20,20 @@ export const JOBS: Job[] = [
   { name: 'pirep', due: (m) => m % 10 === 2, run: ingestPirep },
   { name: 'sigmet', due: (m) => m % 10 === 3, run: ingestSigmet },
   { name: 'forecast', due: (m) => m === 7, run: ingestForecast },
-  // Spec says minute 59; minute 4 of the next hour also catches late ARR/LOW events (detected after
-  // lostAfterSec). Both run, the rollup is an idempotent upsert of the previous + current hour.
-  { name: 'stats', due: (m) => m === 59 || m === 4, run: rollupHours },
+  // LOCAL minute 59 (end of the local clock hour; NST/NDT hours end at :30 UTC), plus local minute 4
+  // to catch late ARR/LOW events. Both run; the rollup is an idempotent upsert of previous + current hour.
+  { name: 'stats', due: (_m, _h, lm) => lm === 59 || lm === 4, run: rollupHours },
   { name: 'prune', due: (m, h) => h === 7 && m === 30, run: prune },
 ];
 
 export async function dispatch(t: Date, env: Env): Promise<HealthState> {
   const now = unixNow(t);
   const m = t.getUTCMinutes(), h = t.getUTCHours();
+  const lm = (((Math.floor((now + tzOffsetSec(now, AIRPORT.tz)) / 60)) % 60) + 60) % 60;   // local minute
 
   const hs = await getState(env.DB, ['health']);
   const health: HealthState = (hs.ok && (hs.value.health?.value as HealthState)) || {};
-  const plan = new Map(jobsToRun(JOBS, m, h, now, health).map((p) => [p.name, p.why]));
+  const plan = new Map(jobsToRun(JOBS, m, h, now, health, lm).map((p) => [p.name, p.why]));
 
   // run(): catches errors, records {lastOkAt|lastError} into health; never rethrows.
   for (const job of JOBS) {

@@ -1,5 +1,6 @@
 // Pure. Movement rollups (hourly rows, today summary, multi-day aggregates).
-import { localDayKey, hourStart } from '../lib/time';
+import { AIRPORT } from '../config';
+import { localDayKey, localHourStart } from '../lib/time';
 import type { Movement, MovementEvent, StatsDay, StatsHourlyRow, StatsToday } from '../types';
 
 type M = Pick<MovementEvent, 'kind' | 'ts' | 'airline' | 'type' | 'runway'>;
@@ -30,20 +31,20 @@ export function rollupHourRow(hourTs: number, movements: M[], maxAircraftSeen: n
 }
 
 /** Today summary from raw movements since local midnight. */
-export function todaySummary(movements: M[], dayStart: number, now: number): StatsToday {
+export function todaySummary(movements: M[], dayStart: number, now: number, tz: string = AIRPORT.tz): StatsToday {
   const byHourMap = new Map<number, { arr: number; dep: number }>();
   const airlines: Record<string, number> = {};
   let arr = 0, dep = 0;
   for (const m of movements) {
     if (m.ts < dayStart || m.ts > now) continue;
-    const h = hourStart(m.ts);
+    const h = localHourStart(m.ts, tz);
     const b = byHourMap.get(h) ?? { arr: 0, dep: 0 };
     if (m.kind === 'ARR') { arr++; b.arr++; } else { dep++; b.dep++; }
     byHourMap.set(h, b);
     bump(airlines, m.airline);
   }
   const byHour: StatsToday['byHour'] = [];
-  for (let h = hourStart(dayStart); h <= now; h += 3600) {
+  for (let h = localHourStart(dayStart, tz); h <= now; h += 3600) {
     const b = byHourMap.get(h) ?? { arr: 0, dep: 0 };
     byHour.push({ hourTs: h, ...b });
   }

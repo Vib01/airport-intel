@@ -15,6 +15,13 @@ describe('jobsToRun', () => {
     expect(jobsToRun(JOBS, 7, 12, NOW, healthy()).map((j) => j.name)).toEqual(['adsb', 'routes', 'forecast']);
   });
 
+  it('stats rollup runs at LOCAL minute 59 and 4 (NST: UTC :29 and :34), not UTC :59', () => {
+    const names = (m: number, lm: number) => jobsToRun(JOBS, m, 3, NOW, healthy(), lm).map((j) => j.name);
+    expect(names(29, 59)).toContain('stats');
+    expect(names(34, 4)).toContain('stats');
+    expect(names(59, 29)).not.toContain('stats');
+  });
+
   it('fresh deploy: never-run jobs catch up, bounded per tick', () => {
     const r = jobsToRun(JOBS, 11, 12, NOW, {});
     expect(r.filter((j) => j.why === 'catchup')).toHaveLength(CATCHUP.maxPerTick);

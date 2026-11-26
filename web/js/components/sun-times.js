@@ -12,8 +12,8 @@ export function sunTimes(date = new Date()) {
   return { dawn: s(t.dawn), sunrise: s(t.sunrise), sunset: s(t.sunset), dusk: s(t.dusk) };
 }
 
-export function renderSunTimes(el, compact = false) {
-  const t = sunTimes();
+export function renderSunTimes(el, compact = false, now = null) {
+  const t = sunTimes(now != null ? new Date(now * 1000) : new Date());
   if (!t) { el.textContent = 'Sun times unavailable'; return; }
   const items = [['Civil dawn', t.dawn], ['Sunrise', t.sunrise], ['Sunset', t.sunset], ['Civil dusk', t.dusk]];
   el.innerHTML = `<dl class="sun ${compact ? 'compact' : ''}">${items.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(hm(v))}</dd></div>`).join('')}</dl>`;

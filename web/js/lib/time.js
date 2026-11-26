@@ -22,6 +22,22 @@ export const ddhhmmZ = (ts) => {
 };
 export const nowSec = () => Math.floor(Date.now() / 1000);
 
+/** UTC offset of the airport time zone at instant ts (seconds), e.g. -12600 for NST. */
+export function tzOffsetSec(ts) {
+  const p = Object.fromEntries(f({ year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+    .formatToParts(ts * 1000).map((x) => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) / 1000 - Math.floor(ts);
+}
+
+/** Start of the LOCAL clock hour containing ts (NST hours start at :30 UTC). */
+export function localHourStart(ts) {
+  const t = Math.floor(ts);
+  return t - ((((t + tzOffsetSec(t)) % 3600) + 3600) % 3600);
+}
+
+/** Local hour-of-day (0–23) at ts. */
+export const localHour = (ts) => Math.floor(((((ts + tzOffsetSec(ts)) % 86400) + 86400) % 86400) / 3600);
+
 export function ago(ts, now = nowSec()) {
   if (!ts) return 'never';
   const s = Math.max(0, now - ts);

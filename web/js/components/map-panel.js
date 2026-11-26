@@ -70,10 +70,10 @@ export class MapPanel {
   applyOverlays() {
     this.ov.setRadar(this.prefs.radar, this.prefs.radarKind);
     this.ov.setSigmets(this.pilot?.sigmet, this.prefs.sigmet);
-    this.ov.setPireps(this.pilot?.pirep, this.prefs.pirep);
+    this.ov.setPireps(this.pilot?.pirep, this.prefs.pirep, this.now ?? undefined);
   }
 
-  setPilot(p) { this.pilot = p; this.applyOverlays(); }
+  setPilot(p, now) { this.pilot = p; this.now = now; this.applyOverlays(); }
 
   setDashboard(d) {
     this.aircraft = d?.aircraft ?? [];

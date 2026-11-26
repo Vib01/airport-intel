@@ -1,12 +1,12 @@
-import { RETENTION } from '../config';
+import { AIRPORT, RETENTION } from '../config';
 import { rollupHourRow } from '../derive/stats';
-import { hourStart } from '../lib/time';
+import { localHourStart } from '../lib/time';
 import { getState, hourlyStmt, pruneStmts, queryMovements, runBatch } from '../store/d1';
 import type { Env, TrackState } from '../types';
 
 /** Roll up the previous full hour and the current partial hour (idempotent upserts). */
 export async function rollupHours(env: Env, now: number) {
-  const cur = hourStart(now), prev = cur - 3600;
+  const cur = localHourStart(now, AIRPORT.tz), prev = cur - 3600;   // local clock hours
   const [mv, st] = await Promise.all([queryMovements(env.DB, prev, cur + 3600), getState(env.DB, ['tracks'])]);
   if (!mv.ok) throw new Error(`D1 read: ${mv.error}`);
   const hm = st.ok ? ((st.value.tracks?.value as TrackState | undefined)?.hourMax ?? []) : [];

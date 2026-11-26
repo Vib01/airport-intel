@@ -1,11 +1,11 @@
 // Side sheet with details for one aircraft.
 import { esc } from '../lib/dom.js';
 import { compassAbbr, fmt } from '../lib/units.js';
-import { ago, hm } from '../lib/time.js';
+import { ago, hm, nowSec } from '../lib/time.js';
 import { airlineName, loadAirlines } from '../lib/airlines.js';
 
 /** @param {HTMLElement} el @param {import('../types.js').Aircraft|null} a */
-export function renderAircraftDetail(el, a, onClose) {
+export function renderAircraftDetail(el, a, onClose, now = nowSec()) {
   if (!a) { el.hidden = true; el.innerHTML = ''; return; }
   el.hidden = false;
   const draw = () => {
@@ -21,7 +21,7 @@ export function renderAircraftDetail(el, a, onClose) {
       ['Squawk', a.squawk ?? '—'],
       ['From YYT', `${a.distNm} nm ${compassAbbr(a.bearingDeg)} (${fmt.dir(a.bearingDeg)})`],
       ['ICAO hex', a.hex.toUpperCase()],
-      ['Position', `${hm(a.ts)} local · ${ago(a.ts)}`],
+      ['Position', `${hm(a.ts)} local · ${ago(a.ts, now)}`],
       ['Route', 'Not shown — ADS-B routes are community-sourced and unverified'],
     ];
     el.innerHTML = `<div class="sheet-h">
