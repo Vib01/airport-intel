@@ -87,6 +87,19 @@ export const BOARD = {
   levelFpm: 300,                 // |vertical speed| below this → LEVEL
 };
 
+// OpenSky Network (free account, OAuth2 client credentials). Primary aircraft source when the
+// OPENSKY_CLIENT_ID / OPENSKY_CLIENT_SECRET secrets exist. A bbox under 25 sq° costs 1 credit;
+// registered users get 4,000/day, so one request a minute (1,440/day) fits.
+export const OPENSKY = {
+  // OFF: OpenSky drops connections from Cloudflare (HTTP 522 from Workers, tested 2026-11-26), though the
+  // same credentials work from a home connection. Re-enable only if requests come from a non-cloud IP.
+  enabled: false,
+  tokenUrl: 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token',
+  statesUrl: 'https://opensky-network.org/api/states/all',
+  boxDeg: { lat: 1.0, lon: 1.48 },   // ≈ ±60 nm around the airport (cos 47.6° ≈ 0.675)
+  tokenRefreshMarginSec: 60,
+};
+
 export const AWC_BASE = 'https://aviationweather.gov/api/data';
 export const OPEN_METEO_BASE = 'https://api.open-meteo.com/v1/forecast';
 

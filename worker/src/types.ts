@@ -7,6 +7,8 @@ export type Env = {
   FEATURE_SCHEDULE?: string;
   EXTRA_ORIGINS?: string;
   AERODATABOX_KEY?: string;
+  OPENSKY_CLIENT_ID?: string;
+  OPENSKY_CLIENT_SECRET?: string;
 };
 
 export type TrailPoint = [lat: number, lon: number, altFt: number | null, ts: number];

@@ -10,13 +10,18 @@ export class HttpError extends Error {
 }
 
 /** Every upstream fetch goes through here: timeout + User-Agent. Throws HttpError on failure. */
-export async function fetchJson<T = unknown>(url: string, contactEmail: string | undefined): Promise<T> {
+export async function fetchJson<T = unknown>(
+  url: string, contactEmail: string | undefined,
+  init: { method?: string; headers?: Record<string, string>; body?: string } = {},
+): Promise<T> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), HTTP.timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ctl.signal,
-      headers: { 'User-Agent': userAgent(contactEmail), Accept: 'application/json' },
+      method: init.method ?? 'GET',
+      body: init.body,
+      headers: { 'User-Agent': userAgent(contactEmail), Accept: 'application/json', ...(init.headers ?? {}) },
     });
     if (!res.ok) throw new HttpError(`HTTP ${res.status} from ${new URL(url).host}`, res.status);
     const text = await res.text();

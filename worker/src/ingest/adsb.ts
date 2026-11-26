@@ -1,11 +1,60 @@
-// ADS-B ingest with fallback adsb.lol → adsb.fi → airplanes.live (if enabled). Detection + persistence.
-import { ADSB_SOURCES, AIRPORT, RUNWAYS } from '../config';
+// Aircraft ingest: OpenSky (if configured) → adsb.lol → adsb.fi → airplanes.live (if enabled).
+// Then movement detection + persistence.
+import { ADSB_SOURCES, AIRPORT, OPENSKY, RUNWAYS } from '../config';
 import { emptyTrackState, detectMovements } from '../derive/movements';
 import { mergeFinals, observeFinals, runwayInUse } from '../derive/runwayInUse';
-import { fetchJson } from '../lib/http';
+import { fetchJson, HttpError } from '../lib/http';
 import { normalizeAdsbV2 } from '../normalize/adsbV2';
+import { normalizeOpenSky } from '../normalize/opensky';
 import { getState, movementStmt, runBatch, stateStmt } from '../store/d1';
-import type { Env, LiveState, TrackState } from '../types';
+import type { Aircraft, Env, LiveState, TrackState } from '../types';
+
+// OAuth token cached per isolate (valid ~30 min); refreshed shortly before expiry.
+let osToken: { token: string; exp: number } | null = null;
+
+async function openSkyToken(env: Env): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  if (osToken && osToken.exp - OPENSKY.tokenRefreshMarginSec > now) return osToken.token;
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials', client_id: env.OPENSKY_CLIENT_ID!, client_secret: env.OPENSKY_CLIENT_SECRET!,
+  }).toString();
+  const r = await fetchJson<{ access_token?: string; expires_in?: number }>(OPENSKY.tokenUrl, env.CONTACT_EMAIL, {
+    method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  if (!r.access_token) throw new Error('OpenSky token: no access_token in response');
+  osToken = { token: r.access_token, exp: now + (r.expires_in ?? 1800) };
+  return osToken.token;
+}
+
+async function fetchOpenSky(env: Env, now: number): Promise<Aircraft[]> {
+  const token = await openSkyToken(env);
+  const b = OPENSKY.boxDeg;
+  const q = `lamin=${AIRPORT.lat - b.lat}&lomin=${AIRPORT.lon - b.lon}&lamax=${AIRPORT.lat + b.lat}&lomax=${AIRPORT.lon + b.lon}`;
+  try {
+    return normalizeOpenSky(await fetchJson(`${OPENSKY.statesUrl}?${q}`, env.CONTACT_EMAIL, { headers: { Authorization: `Bearer ${token}` } }), now);
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 401) osToken = null;   // expired/revoked: refresh next time
+    throw e;
+  }
+}
+
+/** OpenSky first (when configured), then the ADSBExchange-v2 sources. Returns normalized aircraft. */
+export async function fetchAircraft(env: Env, now: number): Promise<{ source: string; aircraft: Aircraft[] }> {
+  const errors: string[] = [];
+  if (OPENSKY.enabled && env.OPENSKY_CLIENT_ID && env.OPENSKY_CLIENT_SECRET) {
+    try {
+      return { source: 'opensky', aircraft: await fetchOpenSky(env, now) };
+    } catch (e) {
+      errors.push(`opensky: ${(e as Error).message}`);
+    }
+  }
+  try {
+    const { source, raw } = await fetchAdsb(env);
+    return { source, aircraft: normalizeAdsbV2(raw as never, now) };
+  } catch (e) {
+    throw new Error([...errors, (e as Error).message].join(' | '));
+  }
+}
 
 export async function fetchAdsb(env: Env): Promise<{ source: string; raw: unknown }> {
   const errors: string[] = [];
@@ -23,8 +72,7 @@ export async function fetchAdsb(env: Env): Promise<{ source: string; raw: unknow
 
 /** Returns the source used (recorded as health.sourceUsed). */
 export async function ingestAdsb(env: Env, now: number): Promise<string> {
-  const { source, raw } = await fetchAdsb(env);
-  const aircraft = normalizeAdsbV2(raw as never, now);
+  const { source, aircraft } = await fetchAircraft(env, now);
 
   const prev = await getState(env.DB, ['tracks']);
   if (!prev.ok) throw new Error(`D1 read: ${prev.error}`);
