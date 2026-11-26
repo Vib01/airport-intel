@@ -59,12 +59,23 @@ export const SQUAWK = { emergency: '7700', radioFail: '7600', special: '7500' };
 
 export const HTTP = { timeoutMs: 8000, userAgentBase: 'airport-intel/1.0 (+https://thevibs.com/airport-intel' };
 
-export type AdsbSource = { id: string; enabled: boolean; url: (lat: number, lon: number, nm: number) => string };
+/**
+ * ADSBExchange-v2-format sources, tried in order. A source with `keySecret` is used only when that
+ * Worker secret is set; the key is sent in the `keyHeader` request header.
+ */
+export type AdsbSource = {
+  id: string; enabled: boolean; url: (lat: number, lon: number, nm: number) => string;
+  keySecret?: 'AIRPLANES_LIVE_KEY'; keyHeader?: string;
+};
 export const ADSB_SOURCES: AdsbSource[] = [
+  // Primary once the owner's API key is stored: npx wrangler secret put AIRPLANES_LIVE_KEY --name airport-intel
+  // keyHeader must match airplanes.live's API docs (confirm when the key is issued).
+  { id: 'airplanes.live', enabled: true, keySecret: 'AIRPLANES_LIVE_KEY', keyHeader: 'api-auth',
+    url: (lat, lon, nm) => `https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}` },
+  // 500 requests/day per IP (shared Cloudflare egress IPs): fallback only.
   { id: 'adsb.lol', enabled: true, url: (lat, lon, nm) => `https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/${nm}` },
+  // Blocks Cloudflare (403 bot challenge, tested 2026-11-26); harmless last resort.
   { id: 'adsb.fi', enabled: true, url: (lat, lon, nm) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${nm}` },
-  // airplanes.live answers 403 until the owner emails them about the project. Enable after approval.
-  { id: 'airplanes.live', enabled: false, url: (lat, lon, nm) => `https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}` },
 ];
 
 // Callsign → route lookups (community-sourced "standing data", static files; no key). Label as unverified.

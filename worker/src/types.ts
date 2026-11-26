@@ -7,6 +7,7 @@ export type Env = {
   FEATURE_SCHEDULE?: string;
   EXTRA_ORIGINS?: string;
   AERODATABOX_KEY?: string;
+  AIRPLANES_LIVE_KEY?: string;
   OPENSKY_CLIENT_ID?: string;
   OPENSKY_CLIENT_SECRET?: string;
 };

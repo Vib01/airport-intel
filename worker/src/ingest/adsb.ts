@@ -60,8 +60,11 @@ export async function fetchAdsb(env: Env): Promise<{ source: string; raw: unknow
   const errors: string[] = [];
   for (const s of ADSB_SOURCES) {
     if (!s.enabled) continue;
+    const key = s.keySecret ? env[s.keySecret]?.trim() : undefined;
+    if (s.keySecret && !key) continue;                       // keyed source without its key: skip
     try {
-      const raw = await fetchJson(s.url(AIRPORT.lat, AIRPORT.lon, AIRPORT.ingestRadiusNm), env.CONTACT_EMAIL);
+      const headers = key && s.keyHeader ? { [s.keyHeader]: key } : undefined;
+      const raw = await fetchJson(s.url(AIRPORT.lat, AIRPORT.lon, AIRPORT.ingestRadiusNm), env.CONTACT_EMAIL, { headers });
       return { source: s.id, raw };
     } catch (e) {
       errors.push(`${s.id}: ${(e as Error).message}`);
