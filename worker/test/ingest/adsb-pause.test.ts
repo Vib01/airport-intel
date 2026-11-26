@@ -13,7 +13,7 @@ describe('ADS-B daily-limit pause', () => {
     expect(nextUtcMidnight(NOW)).toBe(Date.parse('2026-11-27T00:00:00Z') / 1000);
   });
 
-  it('429 from adsb.lol pauses it; while paused it is not requested at all', async () => {
+  it('429 pauses adsb.lol for 30 min; while paused it is not requested at all', async () => {
     const calls: string[] = [];
     vi.stubGlobal('fetch', async (u: string) => {
       calls.push(new URL(u).host);
@@ -21,7 +21,7 @@ describe('ADS-B daily-limit pause', () => {
     });
     const paused: Record<string, number> = {};
     await expect(fetchAdsb(env, NOW, paused)).rejects.toThrow(/429/);
-    expect(paused['adsb.lol']).toBe(nextUtcMidnight(NOW));
+    expect(paused['adsb.lol']).toBe(NOW + 30 * 60);
     expect(calls).toContain('api.adsb.lol');
 
     calls.length = 0;
@@ -30,7 +30,7 @@ describe('ADS-B daily-limit pause', () => {
 
     calls.length = 0;
     vi.stubGlobal('fetch', async (u: string) => { calls.push(new URL(u).host); return Response.json({ ac: [], now: NOW * 1000 }); });
-    const r = await fetchAdsb(env, nextUtcMidnight(NOW) + 1, paused);       // after the reset
+    const r = await fetchAdsb(env, NOW + 30 * 60 + 1, paused);              // after the back-off
     expect(r.source).toBe('adsb.lol');
   });
 });

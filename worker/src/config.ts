@@ -58,6 +58,9 @@ export const CATEGORY = {             // FAA convention
 
 // adsb.lol allows 500 requests/day per IP: every 3 minutes = 480/day. Lower only with a keyed source.
 export const ADSB_POLL_MIN = 3;
+// After a 429, wait this long before trying that source again (Cloudflare egress IPs vary, so another
+// address may still have quota). Never later than the daily reset at 00:00 UTC.
+export const ADSB_429_RETRY_SEC = 30 * 60;
 
 export const SQUAWK = { emergency: '7700', radioFail: '7600', special: '7500' };
 

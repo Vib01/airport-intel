@@ -1,6 +1,6 @@
 // Aircraft ingest: OpenSky (if configured) → adsb.lol → adsb.fi → airplanes.live (if enabled).
 // Then movement detection + persistence.
-import { ADSB_SOURCES, AIRPORT, OPENSKY, RUNWAYS } from '../config';
+import { ADSB_429_RETRY_SEC, ADSB_SOURCES, AIRPORT, OPENSKY, RUNWAYS } from '../config';
 import { emptyTrackState, detectMovements } from '../derive/movements';
 import { mergeFinals, observeFinals, runwayInUse } from '../derive/runwayInUse';
 import { fetchJson, HttpError } from '../lib/http';
@@ -60,7 +60,7 @@ export async function fetchAdsb(env: Env, now = Math.floor(Date.now() / 1000), p
   const errors: string[] = [];
   for (const s of ADSB_SOURCES) {
     if (!s.enabled) continue;
-    if ((paused[s.id] ?? 0) > now) { errors.push(`${s.id}: paused (daily limit) until ${new Date(paused[s.id] * 1000).toISOString().slice(11, 16)}Z`); continue; }
+    if ((paused[s.id] ?? 0) > now) { errors.push(`${s.id}: paused (rate limit) until ${new Date(paused[s.id] * 1000).toISOString().slice(11, 16)}Z`); continue; }
     const key = s.keySecret ? env[s.keySecret]?.trim() : undefined;
     if (s.keySecret && !key) continue;                       // keyed source without its key: skip
     try {
@@ -68,8 +68,8 @@ export async function fetchAdsb(env: Env, now = Math.floor(Date.now() / 1000), p
       const raw = await fetchJson(s.url(AIRPORT.lat, AIRPORT.lon, AIRPORT.ingestRadiusNm), env.CONTACT_EMAIL, { headers });
       return { source: s.id, raw };
     } catch (e) {
-      // 429 = daily quota used up: stop asking until it resets (next 00:00 UTC) instead of hammering it.
-      if (e instanceof HttpError && e.status === 429) paused[s.id] = nextUtcMidnight(now);
+      // 429 = this address is out of quota: back off for ADSB_429_RETRY_SEC instead of hammering it.
+      if (e instanceof HttpError && e.status === 429) paused[s.id] = Math.min(now + ADSB_429_RETRY_SEC, nextUtcMidnight(now));
       errors.push(`${s.id}: ${(e as Error).message}`);
     }
   }
