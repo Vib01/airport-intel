@@ -1,9 +1,8 @@
 name: Deploy web to GitHub Pages
 
+# Manual only: the website is hosted on Vercel (project root: web/). To use GitHub Pages instead,
+# enable Settings → Pages → Source: GitHub Actions, then add back a `push:` trigger for web/**.
 on:
-  push:
-    branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
